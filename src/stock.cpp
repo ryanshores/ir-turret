@@ -31,8 +31,8 @@
 //////////////////////////////////////////////////
 #include <Arduino.h>
 #include <Servo.h>
-#include "PinDefinitionsAndMore.h" // Define macros for input and output pin etc.
 #include <IRremote.hpp>
+#include "PinDefinitionsAndMore.h" // Define macros for input and output pin etc.
 
 
 #define DECODE_NEC  //defines the type of IR transmission to decode based on the remote. See IRremote library for examples on how to decode other types of remote
@@ -88,106 +88,6 @@ int rollPrecision = 158; // this variable represents the time in milliseconds th
 
 int pitchMax = 175; // this sets the maximum angle of the pitch servo to prevent it from crashing, it should remain below 180, and be greater than the pitchMin
 int pitchMin = 10; // this sets the minimum angle of the pitch servo to prevent it from crashing, it should remain above 0, and be less than the pitchMax
-
-
-//////////////////////////////////////////////////
-              //  S E T U P  //
-//////////////////////////////////////////////////
-void setup() {
-    Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
-
-    yawServo.attach(10); //attach YAW servo to pin 10
-    pitchServo.attach(11); //attach PITCH servo to pin 11
-    rollServo.attach(12); //attach ROLL servo to pin 12
-
-    // Just to know which program is running on my microcontroller
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
-
-    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
-    IrReceiver.begin(9, ENABLE_LED_FEEDBACK);
-
-    Serial.print(F("Ready to receive IR signals of protocols: "));
-    printActiveIRProtocols(&Serial);
-    Serial.println(F("at pin " STR(9)));
-
-
-    homeServos(); //set servo motors to home position
-}
-
-////////////////////////////////////////////////
-              //  L O O P  //
-////////////////////////////////////////////////
-
-void loop() {
-
-    /*
-    * Check if received data is available and if yes, try to decode it.
-    */
-    if (IrReceiver.decode()) {
-
-        /*
-        * Print a short summary of received data
-        */
-        IrReceiver.printIRResultShort(&Serial);
-        IrReceiver.printIRSendUsage(&Serial);
-        if (IrReceiver.decodedIRData.protocol == UNKNOWN) { //command garbled or not recognized
-            Serial.println(F("Received noise or an unknown (or not yet enabled) protocol - if you wish to add this command, define it at the top of the file with the hex code printed below (ex: 0x8)"));
-            // We have an unknown protocol here, print more info
-            IrReceiver.printIRResultRawFormatted(&Serial, true);
-        }
-        Serial.println();
-
-        /*
-        * !!!Important!!! Enable receiving of the next value,
-        * since receiving has stopped after the end of the current received data packet.
-        */
-        IrReceiver.resume(); // Enable receiving of the next value
-
-
-        /*
-        * Finally, check the received data and perform actions according to the received command
-        */
-
-        switch(IrReceiver.decodedIRData.command){ //this is where the commands are handled
-
-            case up://pitch up
-              upMove(1);
-              break;
-            
-            case down://pitch down
-              downMove(1);
-              break;
-
-            case left://fast counterclockwise rotation
-              leftMove(1);
-              break;
-            
-            case right://fast clockwise rotation
-              rightMove(1);
-              break;
-            
-            case ok: //firing routine 
-              fire();
-              //Serial.println("FIRE");
-              break;
-              
-            case star:
-              fireAll();
-              delay(50);
-              break;
-
-            case cmd1:
-              shakeHeadYes();
-              break;
-
-            default:
-              break;
-
-        }
-    }
-    delay(5);
-}
-
 
 void shakeHeadYes(int moves = 3) {
       Serial.println("YES");
@@ -302,4 +202,101 @@ void homeServos(){
     pitchServoVal = 100; // store the pitch servo value
     Serial.println("HOMING");
 }
-   
+
+//////////////////////////////////////////////////
+              //  S E T U P  //
+//////////////////////////////////////////////////
+void setup() {
+    Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
+
+    yawServo.attach(10); //attach YAW servo to pin 10
+    pitchServo.attach(11); //attach PITCH servo to pin 11
+    rollServo.attach(12); //attach ROLL servo to pin 12
+
+    // Just to know which program is running on my microcontroller
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
+
+    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
+    IrReceiver.begin(9, ENABLE_LED_FEEDBACK);
+
+    Serial.print(F("Ready to receive IR signals of protocols: "));
+    printActiveIRProtocols(&Serial);
+    Serial.println(F("at pin " STR(9)));
+
+
+    homeServos(); //set servo motors to home position
+}
+
+////////////////////////////////////////////////
+              //  L O O P  //
+////////////////////////////////////////////////
+
+void loop() {
+
+    /*
+    * Check if received data is available and if yes, try to decode it.
+    */
+    if (IrReceiver.decode()) {
+
+        /*
+        * Print a short summary of received data
+        */
+        IrReceiver.printIRResultShort(&Serial);
+        IrReceiver.printIRSendUsage(&Serial);
+        if (IrReceiver.decodedIRData.protocol == UNKNOWN) { //command garbled or not recognized
+            Serial.println(F("Received noise or an unknown (or not yet enabled) protocol - if you wish to add this command, define it at the top of the file with the hex code printed below (ex: 0x8)"));
+            // We have an unknown protocol here, print more info
+            IrReceiver.printIRResultRawFormatted(&Serial, true);
+        }
+        Serial.println();
+
+        /*
+        * !!!Important!!! Enable receiving of the next value,
+        * since receiving has stopped after the end of the current received data packet.
+        */
+        IrReceiver.resume(); // Enable receiving of the next value
+
+
+        /*
+        * Finally, check the received data and perform actions according to the received command
+        */
+
+        switch(IrReceiver.decodedIRData.command){ //this is where the commands are handled
+
+            case up://pitch up
+              upMove(1);
+              break;
+            
+            case down://pitch down
+              downMove(1);
+              break;
+
+            case left://fast counterclockwise rotation
+              leftMove(1);
+              break;
+            
+            case right://fast clockwise rotation
+              rightMove(1);
+              break;
+            
+            case ok: //firing routine 
+              fire();
+              //Serial.println("FIRE");
+              break;
+              
+            case star:
+              fireAll();
+              delay(50);
+              break;
+
+            case cmd1:
+              shakeHeadYes();
+              break;
+
+            default:
+              break;
+
+        }
+    }
+    delay(5);
+}
