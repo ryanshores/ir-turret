@@ -20,34 +20,32 @@ void RunArduino::loop() {
     switch (remote.get_command()) {
         //this is where the commands are handled
 
-        case up: //pitch up
+        case up:
             servo_control.upMove(1);
-        break;
-
-        case down: //pitch down
+            break;
+        case down:
             servo_control.downMove(1);
-        break;
-
-        case left: //fast counterclockwise rotation
+            break;
+        case left:
             servo_control.leftMove(1);
-        break;
-
-        case right: //fast clockwise rotation
+            break;
+        case right:
             servo_control.rightMove(1);
-        break;
-
-        case ok: //firing routine
+            break;
+        case ok:
             servo_control.fire();
-        break;
-
+            break;
         case star:
             servo_control.fireAll();
-        delay(50);
-        break;
-
+            delay(50);
+            break;
         case cmd1:
             servo_control.shakeHeadYes();
-        break;
+            break;
+        case cmd2:
+            servo_control.shakeHeadNo();
+        case cmd3:
+            servo_control.randomRoulette();
 
         default:
             break;

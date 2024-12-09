@@ -3,7 +3,9 @@
 //
 
 #include <Arduino.h>
+
 #include "ServoControl.h"
+#include "StringHelper.h"
 
 ServoControl::ServoControl(const int yawPin, const int pitchPin, const int rollPin) {
     this-> yawPin = yawPin;
@@ -115,24 +117,77 @@ void ServoControl::downMove(const int moves) {
     }
 }
 
-/**
- * fire does xyz
- */
-void ServoControl::fire() {
-    //function for firing a single dart
-    rollServo.write(rollStopSpeed + rollMoveSpeed); //start rotating the servo
-    delay(rollPrecision); //time for approximately 60 degrees of rotation
-    rollServo.write(rollStopSpeed); //stop rotating the servo
-    delay(5); //delay for smoothness
-    Serial.println("FIRING");
+void ServoControl::fire(int darts){ //function for firing a number of darts
+    Serial.print(F("Firing " STR(darts) " darts!"));
+    for(int i = 0; i < darts; i++){
+        rollServo.write(rollStopSpeed + rollMoveSpeed);//start rotating the servo
+        delay(rollPrecision);//time for approximately 60 degrees of rotation
+        rollServo.write(rollStopSpeed);//stop rotating the servo
+        delay(5); //delay for smoothness
+        if (dartsFired < 6){ // track how many darts have been fired
+            dartsFired++;
+        } else {
+            dartsFired = 6; //lock the number at 6
+            return;
+        }
+    }
 }
 
-void ServoControl::fireAll() {
-    //function to fire all 6 darts at once
-    rollServo.write(rollStopSpeed + rollMoveSpeed); //start rotating the servo
+void ServoControl::fireAll(){ // this function fires all the darts by spinning the barrel
+    rollServo.write(rollStopSpeed + rollMoveSpeed);//start rotating the servo
     delay(rollPrecision * 6); //time for 360 degrees of rotation
-    rollServo.write(rollStopSpeed); //stop rotating the servo
+    rollServo.write(rollStopSpeed);//stop rotating the servo
     delay(5); // delay for smoothness
-    Serial.println("FIRING ALL");
+    Serial.println("FIRING ALL DARTS");
+    dartsFired = 6;
+}
+
+/*
+** this function acts as a form of Roulette, in which a spinning turret stops periodically
+** rolls a (simulated) 6 sided die each time it stops in order to decide whether it should fire or not.
+*/
+void ServoControl::randomRoulette() {
+    Serial.println("ENTERING ROULETTE MODE");
+    dartsFired = 0;
+    while(dartsFired < 6){ //while we still have darts, stay within this while loop
+        if (dartsFired < 6){ // if we still have darts do stuff (this is redundancy to help break out of the while loop in case something weird happens)
+            pitchServoVal = 110;
+            pitchServo.write(pitchServoVal); // set PITCH servo to flat angle
+            yawServo.write(145); // set YAW to rotate slowly
+            delay(400); // rotating for a moment
+            yawServo.write(90); // stop
+            delay(400 * random(1,4)); //wait for a random delay each time
+
+            if(random(3) == 0){ // you have a 1 in six chance of being hit
+                delay(700);
+                if(random(2) == 0){ // 50% chance to either shake the head yes before firing or just fire
+                    shakeHeadYes();
+                    delay(150);
+                    fire(1); // fire 1 dart
+                    delay(100);
+                    // } else if(random(6) == 0){
+                    //   shakeHeadYes();
+                    //   delay(50);
+                    //   fireAll(); // fire all the darts
+                    //   delay(50);
+                } else {
+                    fire(1); // fire 1 dart
+                    delay(50);
+                }
+            }else{
+                if(random(6) == 5){
+                    delay(700);
+                    shakeHeadNo();
+                    delay(300);
+                } else{
+                    delay(700);
+                }
+            }
+        } else{
+            yawServo.write(90); // redundancy to stop the spinning and break out of the while loop
+            return;
+        }
+    }
+    yawServo.write(90); // finally, stop the yaw movement
 }
 
