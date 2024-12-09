@@ -44,9 +44,10 @@ void RunArduino::loop() {
             break;
         case cmd2:
             servo_control.shakeHeadNo();
+            break;
         case cmd3:
             servo_control.randomRoulette();
-
+            break;
         default:
             break;
     }
