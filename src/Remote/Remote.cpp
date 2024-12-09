@@ -1,14 +1,16 @@
 //
 // Created by Ryan Shores on 12/8/24.
 //
-#include "IRRemote.h"
+#include <IRRemote.hpp>
+
+#include "Remote.h"
 #include "StringHelper.h"
 
-IRRemote::IRRemote(int pin) {
+Remote::Remote(int pin) {
   this -> pin = pin;
 }
 
-void IRRemote::setup() {
+void Remote::setup() {
   // Just to know which program is running on my microcontroller
   Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
@@ -20,7 +22,10 @@ void IRRemote::setup() {
   Serial.println(F("at pin" STR(pin)));
 }
 
-bool IRRemote::decode() {
+bool Remote::received() {
+  /*
+  * Check if received data is available and if yes, try to decode it.
+  */
   if (!IrReceiver.decode()) return false;
 
   // Print a short summary of received data
@@ -44,6 +49,7 @@ bool IRRemote::decode() {
   return true;
 }
 
-uint16_t IRRemote::get_command() {
-  return IrReceiver.decodedIRData.command;
+uint16_t Remote::get_command() {
+  if (received()) return IrReceiver.decodedIRData.command;
+  return 0;
 }

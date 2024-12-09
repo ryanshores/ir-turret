@@ -26,105 +26,56 @@
 ************************************************************************************
 */
 
-//////////////////////////////////////////////////
-//  LIBRARIES  //
-//////////////////////////////////////////////////
 #include <Arduino.h>
-#include <IRremote.hpp>
 #include <ServoControl/ServoControl.h>
-#include "RemoteDefinitions.h"
-#include "StringHelper.h"
+#include <Remote/Remote.h>
 
+#include "RemoteDefinitions.h"
+
+auto remote = Remote(9);
 auto servo_control = ServoControl(10,11,12);
 
-//////////////////////////////////////////////////
-//  S E T U P  //
-//////////////////////////////////////////////////
 void setup() {
     Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
-
-    // Just to know which program is running on my microcontroller
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
-
-    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
-    IrReceiver.begin(9, ENABLE_LED_FEEDBACK);
-
-    Serial.print(F("Ready to receive IR signals of protocols: "));
-    printActiveIRProtocols(&Serial);
-    Serial.println(F("at pin" STR(9)));
-
+    remote.setup();
     servo_control.setup();
 }
 
-////////////////////////////////////////////////
-//  L O O P  //
-////////////////////////////////////////////////
-
 void loop() {
-    /*
-    * Check if received data is available and if yes, try to decode it.
-    */
-    if (IrReceiver.decode()) {
-        /*
-        * Print a short summary of received data
-        */
-        IrReceiver.printIRResultShort(&Serial);
-        IrReceiver.printIRSendUsage(&Serial);
-        if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-            //command garbled or not recognized
-            Serial.println(F(
-                "Received noise or an unknown (or not yet enabled) protocol - if you wish to add this command, define it at the top of the file with the hex code printed below (ex: 0x8)"));
-            // We have an unknown protocol here, print more info
-            IrReceiver.printIRResultRawFormatted(&Serial, true);
-        }
-        Serial.println();
+    switch (remote.get_command()) {
+        //this is where the commands are handled
 
-        /*
-        * !!!Important!!! Enable receiving of the next value,
-        * since receiving has stopped after the end of the current received data packet.
-        */
-        IrReceiver.resume(); // Enable receiving of the next value
+        case up: //pitch up
+            servo_control.upMove(1);
+            break;
 
+        case down: //pitch down
+            servo_control.downMove(1);
+            break;
 
-        /*
-        * Finally, check the received data and perform actions according to the received command
-        */
+        case left: //fast counterclockwise rotation
+            servo_control.leftMove(1);
+            break;
 
-        switch (IrReceiver.decodedIRData.command) {
-            //this is where the commands are handled
+        case right: //fast clockwise rotation
+            servo_control.rightMove(1);
+            break;
 
-            case up: //pitch up
-                servo_control.upMove(1);
-                break;
+        case ok: //firing routine
+            servo_control.fire();
+            break;
 
-            case down: //pitch down
-                servo_control.downMove(1);
-                break;
+        case star:
+            servo_control.fireAll();
+            delay(50);
+            break;
 
-            case left: //fast counterclockwise rotation
-                servo_control.leftMove(1);
-                break;
+        case cmd1:
+            servo_control.shakeHeadYes();
+            break;
 
-            case right: //fast clockwise rotation
-                servo_control.rightMove(1);
-                break;
-
-            case ok: //firing routine
-                servo_control.fire();
-                break;
-
-            case star:
-                servo_control.fireAll();
-                delay(50);
-                break;
-
-            case cmd1:
-                servo_control.shakeHeadYes();
-                break;
-
-            default:
-                break;
-        }
+        default:
+            break;
     }
     delay(5);
 }
