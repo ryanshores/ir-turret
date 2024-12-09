@@ -30,18 +30,20 @@
 //  LIBRARIES  //
 //////////////////////////////////////////////////
 #include <Arduino.h>
-#include <Servo.h>
 #include <IRremote.hpp>
+#include <ServoControl/ServoControl.h>
+
 #include "PinDefinitionsAndMore.h" // Define macros for input and output pin etc.
 #include "RemoteDefinitions.h"
-#include "ServoControl.h"
 
-ServoControl servo_control;
+auto servo_control = ServoControl(10,11,12);
 
 //////////////////////////////////////////////////
 //  S E T U P  //
 //////////////////////////////////////////////////
 void setup() {
+    Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
+
     // Just to know which program is running on my microcontroller
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
@@ -52,8 +54,7 @@ void setup() {
     printActiveIRProtocols(&Serial);
     Serial.println(F("at pin " STR(9)));
 
-
-    // homeServos(); //set servo motors to home position
+    servo_control.setup();
 }
 
 ////////////////////////////////////////////////

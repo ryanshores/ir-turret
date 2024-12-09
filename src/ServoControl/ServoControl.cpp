@@ -5,16 +5,19 @@
 #include <Arduino.h>
 #include "ServoControl.h"
 
-#define HEAD_SHAKE_DEFAULT 3
+ServoControl::ServoControl(const int yawPin, const int pitchPin, const int rollPin) {
+    this-> yawPin = yawPin;
+    this-> pitchPin = pitchPin;
+    this-> rollPin = rollPin;
+}
 
-ServoControl::ServoControl() {
-  Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
 
-  yawServo.attach(10); //attach YAW servo to pin 10
-  pitchServo.attach(11); //attach PITCH servo to pin 11
-  rollServo.attach(12); //attach ROLL servo to pin 12
+void ServoControl::setup() {
+    yawServo.attach(yawPin); //attach YAW servo to pin 10
+    pitchServo.attach(pitchPin); //attach PITCH servo to pin 11
+    rollServo.attach(rollPin); //attach ROLL servo to pin 12
 
-  this->homeServos();
+    homeServos();
 }
 
 void ServoControl::homeServos() {
@@ -28,10 +31,10 @@ void ServoControl::homeServos() {
   Serial.println("HOMING");
 }
 
-void ServoControl::shakeHeadYes(int moves) {
+void ServoControl::shakeHeadYes(const int moves) {
   Serial.println("YES");
-  int startAngle = pitchServoVal; // Current position of the pitch servo
-  int nodAngle = startAngle + 20; // Angle for nodding motion
+  const int startAngle = pitchServoVal; // Current position of the pitch servo
+  const int nodAngle = startAngle + 20; // Angle for nodding motion
 
   for (int i = 0; i < moves; i++) { // Repeat nodding motion three times
     // Nod up
@@ -49,7 +52,7 @@ void ServoControl::shakeHeadYes(int moves) {
   }
 }
 
-void ServoControl::shakeHeadNo(int moves) {
+void ServoControl::shakeHeadNo(const int moves) {
   Serial.println("NO");
 
   for (int i = 0; i < moves; i++) {
@@ -66,7 +69,7 @@ void ServoControl::shakeHeadNo(int moves) {
   }
 }
 
-void ServoControl::leftMove(int moves) {
+void ServoControl::leftMove(const int moves) {
     for (int i = 0; i < moves; i++) {
         yawServo.write(yawStopSpeed + yawMoveSpeed);
         // adding the servo speed = 180 (full counterclockwise rotation speed)
@@ -77,7 +80,7 @@ void ServoControl::leftMove(int moves) {
     }
 }
 
-void ServoControl::rightMove(int moves) {
+void ServoControl::rightMove(const int moves) {
     // function to move right
     for (int i = 0; i < moves; i++) {
         yawServo.write(yawStopSpeed - yawMoveSpeed); //subtracting the servo speed = 0 (full clockwise rotation speed)
@@ -88,7 +91,7 @@ void ServoControl::rightMove(int moves) {
     }
 }
 
-void ServoControl::upMove(int moves) {
+void ServoControl::upMove(const int moves) {
     for (int i = 0; i < moves; i++) {
         if (pitchServoVal > pitchMin) {
             //make sure the servo is within rotation limits (greater than 10 degrees by default)
@@ -100,7 +103,7 @@ void ServoControl::upMove(int moves) {
     }
 }
 
-void ServoControl::downMove(int moves) {
+void ServoControl::downMove(const int moves) {
     for (int i = 0; i < moves; i++) {
         if (pitchServoVal < pitchMax) {
             //make sure the servo is within rotation limits (less than 175 degrees by default)
