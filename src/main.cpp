@@ -27,55 +27,15 @@
 */
 
 #include <Arduino.h>
-#include <ServoControl/ServoControl.h>
-#include <Remote/Remote.h>
+#include <Stock/Stock.h>
 
-#include "RemoteDefinitions.h"
-
-auto remote = Remote(9);
-auto servo_control = ServoControl(10,11,12);
+Stock stock;
 
 void setup() {
     Serial.begin(9600); // initializes the Serial communication between the computer and the microcontroller
-    remote.setup();
-    servo_control.setup();
+    stock.setup();
 }
 
 void loop() {
-    switch (remote.get_command()) {
-        //this is where the commands are handled
-
-        case up: //pitch up
-            servo_control.upMove(1);
-            break;
-
-        case down: //pitch down
-            servo_control.downMove(1);
-            break;
-
-        case left: //fast counterclockwise rotation
-            servo_control.leftMove(1);
-            break;
-
-        case right: //fast clockwise rotation
-            servo_control.rightMove(1);
-            break;
-
-        case ok: //firing routine
-            servo_control.fire();
-            break;
-
-        case star:
-            servo_control.fireAll();
-            delay(50);
-            break;
-
-        case cmd1:
-            servo_control.shakeHeadYes();
-            break;
-
-        default:
-            break;
-    }
-    delay(5);
+    stock.loop();
 }
