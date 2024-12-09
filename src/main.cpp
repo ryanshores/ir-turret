@@ -32,9 +32,8 @@
 #include <Arduino.h>
 #include <IRremote.hpp>
 #include <ServoControl/ServoControl.h>
-
-#include "PinDefinitionsAndMore.h" // Define macros for input and output pin etc.
 #include "RemoteDefinitions.h"
+#include "StringHelper.h"
 
 auto servo_control = ServoControl(10,11,12);
 
@@ -52,7 +51,7 @@ void setup() {
 
     Serial.print(F("Ready to receive IR signals of protocols: "));
     printActiveIRProtocols(&Serial);
-    Serial.println(F("at pin " STR(9)));
+    Serial.println(F("at pin" STR(9)));
 
     servo_control.setup();
 }
