@@ -23,20 +23,19 @@ void ServoControl::setup() {
 }
 
 void ServoControl::homeServos() {
-  yawServo.write(yawStopSpeed); //setup YAW servo to be STOPPED (90)
+  yawServo.write(stopSpeed); //setup YAW servo to be STOPPED (90)
   delay(20);
-  rollServo.write(rollStopSpeed); //setup ROLL servo to be STOPPED (90)
+  rollServo.write(stopSpeed); //setup ROLL servo to be STOPPED (90)
   delay(100);
-  pitchServo.write(100); //set PITCH servo to 100 degree position
+  pitchServo.write(pitchFlat); //set PITCH servo to 100 degree position
   delay(100);
-  pitchServoVal = 100; // store the pitch servo value
   Serial.println("HOMING");
 }
 
 void ServoControl::shakeHeadYes(const int moves) {
   Serial.println("YES");
   const int startAngle = pitchServoVal; // Current position of the pitch servo
-  const int nodAngle = startAngle + 20; // Angle for nodding motion
+  const int nodAngle = pitchServoVal + 20; // Angle for nodding motion
 
   for (int i = 0; i < moves; i++) { // Repeat nodding motion three times
     // Nod up
@@ -60,23 +59,23 @@ void ServoControl::shakeHeadNo(const int moves) {
   for (int i = 0; i < moves; i++) {
     // Repeat nodding motion three times
     // rotate right, stop, then rotate left, stop
-    yawServo.write(140);
+    yawServo.write(mediumForward);
     delay(190); // Adjust delay for smoother motion
-    yawServo.write(yawStopSpeed);
+    yawServo.write(stopSpeed);
     delay(50);
-    yawServo.write(40);
+    yawServo.write(mediumBackward);
     delay(190); // Adjust delay for smoother motion
-    yawServo.write(yawStopSpeed);
+    yawServo.write(stopSpeed);
     delay(50); // Pause at starting position
   }
 }
 
 void ServoControl::leftMove(const int moves) {
     for (int i = 0; i < moves; i++) {
-        yawServo.write(yawStopSpeed + yawMoveSpeed);
+        yawServo.write(mediumForward);
         // adding the servo speed = 180 (full counterclockwise rotation speed)
         delay(yawPrecision); // stay rotating for a certain number of milliseconds
-        yawServo.write(yawStopSpeed); // stop rotating
+        yawServo.write(stopSpeed); // stop rotating
         delay(5); //delay for smoothness
         Serial.println("LEFT");
     }
@@ -85,9 +84,9 @@ void ServoControl::leftMove(const int moves) {
 void ServoControl::rightMove(const int moves) {
     // function to move right
     for (int i = 0; i < moves; i++) {
-        yawServo.write(yawStopSpeed - yawMoveSpeed); //subtracting the servo speed = 0 (full clockwise rotation speed)
+        yawServo.write(mediumBackward); //subtracting the servo speed = 0 (full clockwise rotation speed)
         delay(yawPrecision);
-        yawServo.write(yawStopSpeed);
+        yawServo.write(stopSpeed);
         delay(5);
         Serial.println("RIGHT");
     }
@@ -109,7 +108,7 @@ void ServoControl::downMove(const int moves) {
     for (int i = 0; i < moves; i++) {
         if (pitchServoVal < pitchMax) {
             //make sure the servo is within rotation limits (less than 175 degrees by default)
-            pitchServoVal = pitchServoVal + pitchMoveSpeed; //increment the current angle and update
+            pitchServoVal = pitchServoVal + pitchAmount; //increment the current angle and update
             pitchServo.write(pitchServoVal);
             delay(50);
             Serial.println("DOWN");
@@ -120,9 +119,9 @@ void ServoControl::downMove(const int moves) {
 void ServoControl::fire(int darts){ //function for firing a number of darts
     Serial.print(F("Firing " STR(darts) " darts!"));
     for(int i = 0; i < darts; i++){
-        rollServo.write(rollStopSpeed + rollMoveSpeed);//start rotating the servo
+        rollServo.write(fastForward);//start rotating the servo
         delay(rollPrecision);//time for approximately 60 degrees of rotation
-        rollServo.write(rollStopSpeed);//stop rotating the servo
+        rollServo.write(stopSpeed);//stop rotating the servo
         delay(5); //delay for smoothness
         if (dartsFired < 6){ // track how many darts have been fired
             dartsFired++;
@@ -134,9 +133,9 @@ void ServoControl::fire(int darts){ //function for firing a number of darts
 }
 
 void ServoControl::fireAll(){ // this function fires all the darts by spinning the barrel
-    rollServo.write(rollStopSpeed + rollMoveSpeed);//start rotating the servo
+    rollServo.write(fastForward);//start rotating the servo
     delay(rollPrecision * 6); //time for 360 degrees of rotation
-    rollServo.write(rollStopSpeed);//stop rotating the servo
+    rollServo.write(stopSpeed);//stop rotating the servo
     delay(5); // delay for smoothness
     Serial.println("FIRING ALL DARTS");
     dartsFired = 6;
@@ -150,44 +149,46 @@ void ServoControl::randomRoulette() {
     Serial.println("ENTERING ROULETTE MODE");
     dartsFired = 0;
     while(dartsFired < 6){ //while we still have darts, stay within this while loop
-        if (dartsFired < 6){ // if we still have darts do stuff (this is redundancy to help break out of the while loop in case something weird happens)
-            pitchServoVal = 110;
-            pitchServo.write(pitchServoVal); // set PITCH servo to flat angle
-            yawServo.write(145); // set YAW to rotate slowly
-            delay(400); // rotating for a moment
-            yawServo.write(90); // stop
-            delay(400 * random(1,4)); //wait for a random delay each time
+        pitchServo.write(pitchUpSlight); // set PITCH servo to flat angle
+        yawServo.write(slowForward); // set YAW to rotate slowly
+        delay(400); // rotating for a moment
+        yawServo.write(stopSpeed); // stop
+        delay(400 * random(1,4)); //wait for a random delay each time
 
-            if(random(3) == 0){ // you have a 1 in six chance of being hit
-                delay(700);
-                if(random(2) == 0){ // 50% chance to either shake the head yes before firing or just fire
-                    shakeHeadYes();
-                    delay(150);
-                    fire(1); // fire 1 dart
-                    delay(100);
-                    // } else if(random(6) == 0){
-                    //   shakeHeadYes();
-                    //   delay(50);
-                    //   fireAll(); // fire all the darts
-                    //   delay(50);
-                } else {
-                    fire(1); // fire 1 dart
-                    delay(50);
-                }
-            }else{
-                if(random(6) == 5){
-                    delay(700);
-                    shakeHeadNo();
-                    delay(300);
-                } else{
-                    delay(700);
-                }
+        if(random(3) == 0){ // you have a 1 in six chance of being hit
+            delay(700);
+            if(random(2) == 0){ // 50% chance to either shake the head yes before firing or just fire
+                shakeHeadYes();
+                delay(150);
+                fire(1); // fire 1 dart
+                delay(100);
+                } else if(random(6) == 0){
+                  shakeHeadYes();
+                  delay(50);
+                  fireAll(); // fire all the darts
+                  delay(50);
+            } else {
+                fire(1); // fire 1 dart
+                delay(50);
             }
-        } else{
-            yawServo.write(90); // redundancy to stop the spinning and break out of the while loop
-            return;
+        }else{
+            if(random(6) == 5){
+                delay(700);
+                shakeHeadNo();
+                delay(300);
+            } else{
+                delay(700);
+            }
         }
     }
-    yawServo.write(90); // finally, stop the yaw movement
+    yawServo.write(stopSpeed); // finally, stop the yaw movement
 }
+
+void ServoControl::roll(int value, int delayMs) {
+    rollServo.write(value);
+    delay(delayMs);
+    rollServo.write(stopSpeed);
+    delay(5);
+}
+
 

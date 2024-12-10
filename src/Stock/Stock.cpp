@@ -48,6 +48,11 @@ void RunArduino::loop() {
         case cmd3:
             servo_control.randomRoulette();
             break;
+        case cmd4:
+            servo_control.roll(servo_control.fastForward, 70);
+            break;
+        case cmd5:
+            servo_control.roll(servo_control.fastBackward, 4000);
         default:
             break;
     }
